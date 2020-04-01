@@ -10,13 +10,22 @@ import Spinner from "../common/Spinner";
 import { toast } from "react-toastify";
 
 class CoursesPage extends React.Component {
-  state = {
-    redirectToAddCoursePage: false
-  };
+  // state = {
+  //   redirectToAddCoursePage: false,
+  // };
+  constructor(props){
+    super(props);
+
+    this.state = {
+        redirectToAddCoursePage: false,
+        coursesDisplayed: this.props.courses,
+      };
+    this.onInputChange = this.onInputChange.bind(this)  
+  }
 
   componentDidMount() {
-    const { courses, authors, actions } = this.props;
-
+    const { courses, authors, actions } = this.props
+  
     if (courses.length === 0) {
       actions.loadCourses().catch(error => {
         alert("Loading courses failed" + error);
@@ -30,6 +39,17 @@ class CoursesPage extends React.Component {
     }
   }
 
+  static getDerivedStateFromProps(props, state) {
+    if (props.courses !== state.coursesDisplayed) {
+
+      return {
+        coursesDisplayed: state.coursesDisplayed,
+      };
+    }
+    // Return null if the state hasn't changed
+    return null;
+  }
+
   handleDeleteCourse = async course => {
     toast.success("Course deleted");
     try {
@@ -39,7 +59,19 @@ class CoursesPage extends React.Component {
     }
   };
 
+  onInputChange(event){
+    let filteredCourses = this.props.courses.filter(course=> course.title.toLowerCase().includes(event.target.value.toLowerCase()))
+
+    this.setState({
+      searchTerm: event.target.value,
+      coursesDisplayed: filteredCourses
+    })
+  }
+
+
   render() {
+    const {coursesDisplayed}= this.state
+
     return (
       <>
         {this.state.redirectToAddCoursePage && <Redirect to="/course" />}
@@ -54,11 +86,13 @@ class CoursesPage extends React.Component {
               onClick={() => this.setState({ redirectToAddCoursePage: true })}
             >
               Add Course
-            </button>
-
-            <CourseList
+            </button><br/>
+            Search &nbsp;
+            <input type='text' onChange={this.onInputChange}/><br/>
+            <br/>
+              <CourseList
               onDeleteClick={this.handleDeleteCourse}
-              courses={this.props.courses}
+              courses={coursesDisplayed}
             />
           </>
         )}
